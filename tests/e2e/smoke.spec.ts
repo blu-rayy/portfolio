@@ -98,7 +98,7 @@ test.describe('mode switching', () => {
     await page.goto('/');
     await expect(page.locator('html')).toHaveAttribute('data-mode', 'clean');
 
-    await page.getByTestId('mode-switch').filter({ visible: true }).first().click();
+    await page.getByTestId('mode-switch').click();
     await expect(page.locator('html')).toHaveAttribute('data-mode', 'fun');
   });
 
@@ -128,20 +128,22 @@ test.describe('clean mode', () => {
   test('mobile menu: opens, contains focus, Esc closes', async ({ page, isMobile }) => {
     test.skip(!isMobile, 'mobile menu only exists below md');
     await page.goto('/?mode=clean');
-    const button = page.getByRole('button', { name: 'Menu' });
+    const button = page.getByRole('button', { name: 'Menu', exact: true });
     await expect(button).toHaveAttribute('aria-expanded', 'false');
     await button.click();
     await expect(button).toHaveAttribute('aria-expanded', 'true');
     const menu = page.getByRole('dialog', { name: 'Menu' });
     await expect(menu).toBeVisible();
 
-    // Tab a few times: focus must stay inside the dialog.
+    // Tab around: focus may leave to browser chrome (body) but must never land
+    // on the page behind the modal, which is inert.
     for (let i = 0; i < 8; i++) {
       await page.keyboard.press('Tab');
-      const inside = await page.evaluate(
-        () => !!document.activeElement?.closest('#mobile-menu'),
-      );
-      expect(inside).toBe(true);
+      const ok = await page.evaluate(() => {
+        const el = document.activeElement;
+        return !el || el === document.body || !!el.closest('#mobile-menu');
+      });
+      expect(ok).toBe(true);
     }
 
     await page.keyboard.press('Escape');

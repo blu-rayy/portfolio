@@ -7,5 +7,13 @@ export default defineConfig([
   ...nextVitals,
   ...nextTs,
   prettier,
-  globalIgnores(['.next/**', 'node_modules/**', 'coverage/**', 'playwright-report/**', 'test-results/**', '.lighthouseci/**', 'next-env.d.ts']),
+  globalIgnores([
+    '.next/**',
+    'node_modules/**',
+    'coverage/**',
+    'playwright-report/**',
+    'test-results/**',
+    '.lighthouseci/**',
+    'next-env.d.ts',
+  ]),
 ]);

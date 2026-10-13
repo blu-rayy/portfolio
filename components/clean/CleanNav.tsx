@@ -29,8 +29,11 @@ export function CleanNav({ name, links }: { name: string; links: NavLink[] }) {
             {l.label}
           </a>
         ))}
-        <ModeSwitch />
       </nav>
+
+      <div className="ml-auto flex items-center gap-2">
+        <ModeSwitch />
+      </div>
 
       <button
         type="button"
@@ -68,9 +71,6 @@ export function CleanNav({ name, links }: { name: string; links: NavLink[] }) {
                 </a>
               </li>
             ))}
-            <li>
-              <ModeSwitch />
-            </li>
           </ul>
         </nav>
       </dialog>

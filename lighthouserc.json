@@ -5,14 +5,29 @@
       "startServerReadyPattern": "Ready",
       "url": ["http://localhost:3100/?mode=fun", "http://localhost:3100/?mode=clean"],
       "numberOfRuns": 3,
-      "settings": { "preset": "perf", "formFactor": "mobile" }
+      "settings": {
+        "onlyCategories": ["performance", "accessibility"]
+      }
     },
     "assert": {
       "assertions": {
-        "categories:performance": ["error", { "minScore": 0.9 }],
-        "categories:accessibility": ["error", { "minScore": 0.9 }]
+        "categories:performance": [
+          "error",
+          {
+            "minScore": 0.9
+          }
+        ],
+        "categories:accessibility": [
+          "error",
+          {
+            "minScore": 0.9
+          }
+        ]
       }
     },
-    "upload": { "target": "filesystem", "outputDir": ".lighthouseci" }
+    "upload": {
+      "target": "filesystem",
+      "outputDir": ".lighthouseci"
+    }
   }
 }
