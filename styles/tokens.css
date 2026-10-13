@@ -1,0 +1,45 @@
+/*
+ * Design tokens: structure only. Real values come with the visual design pass.
+ * Names are semantic and shared by both modes; each mode supplies its own
+ * values. Use them in markup as e.g. `bg-(--color-bg)` / `text-(--color-ink)`.
+ */
+
+[data-mode='fun'] {
+  --color-bg: #d8d8d8;
+  --color-surface: #ffffff;
+  --color-ink: #111111;
+  --color-primary: #3355ff;
+  --color-accent: #ff3388;
+
+  --font-display: system-ui, sans-serif;
+  --font-body: system-ui, sans-serif;
+  --font-ui: system-ui, sans-serif;
+
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+}
+
+[data-mode='clean'] {
+  --color-bg: #fafafa;
+  --color-surface: #ffffff;
+  --color-ink: #1a1a1a;
+  --color-primary: #1f4fd8;
+  --color-accent: #d81f6a;
+
+  --font-display: system-ui, sans-serif;
+  --font-body: system-ui, sans-serif;
+  --font-ui: system-ui, sans-serif;
+
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+}
