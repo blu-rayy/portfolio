@@ -1,0 +1,23 @@
+[
+  {
+    "placeholder": true,
+    "date": "2026-01",
+    "role": "[Placeholder] Software Engineering Intern",
+    "org": "Example Corp",
+    "description": "[Placeholder] Describe what you built and the impact it had."
+  },
+  {
+    "placeholder": true,
+    "date": "2025-09",
+    "role": "[Placeholder] Teaching Assistant",
+    "org": "Example University",
+    "description": "[Placeholder] Describe your responsibilities."
+  },
+  {
+    "placeholder": true,
+    "date": "2024-09",
+    "role": "[Placeholder] BSc Computer Science",
+    "org": "Example University",
+    "description": "[Placeholder] Software Engineering track."
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "placeholder": true,
+  "name": "[Placeholder] Your Name",
+  "tagline": "[Placeholder] Computer science student building things for the web.",
+  "bio": "[Placeholder] Replace this with a short bio. Software Engineering track, interested in front-end engineering, tooling and developer experience.",
+  "currently": "[Placeholder] Working on coursework and this portfolio.",
+  "openTo": ["Internships", "Junior roles", "Collaborations"],
+  "location": "[Placeholder] City, Country",
+  "socials": [
+    { "label": "GitHub", "url": "https://github.com/example" },
+    { "label": "LinkedIn", "url": "https://www.linkedin.com/in/example" }
+  ],
+  "resume": "/resume.pdf"
+}
