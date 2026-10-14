@@ -46,14 +46,61 @@ export const profileSchema = z.object({
   placeholder: z.boolean().default(false),
 });
 
+export const skillGroupSchema = z.object({
+  group: z.string().min(1),
+  items: z.array(z.string().min(1)).min(1),
+  placeholder: z.boolean().default(false),
+});
+export const skillsSchema = z.array(skillGroupSchema).min(1);
+
+/**
+ * Copy for the fun skin itself (desktop chrome, notes, the mascot). It is not
+ * portfolio content, so clean mode doesn't have to show it; everything a
+ * visitor needs to know about Kris lives in the other collections.
+ */
+export const funCopySchema = z.object({
+  osName: z.string().min(1),
+  welcome: z.object({
+    greeting: z.string().min(1),
+    headline: z.string().min(1),
+    intro: z.string().min(1),
+    tip: z.string().min(1),
+    tipMascot: z.string().min(1),
+    photoAlt: z.string().min(1),
+    buttons: z.object({
+      works: z.string().min(1),
+      me: z.string().min(1),
+      contact: z.string().min(1),
+    }),
+  }),
+  worksIntro: z.string().min(1),
+  sticky: z.string().min(1),
+  mascot: z.object({
+    name: z.string().min(1),
+    bubble: z.string().min(1),
+  }),
+  guestbook: z.string().min(1),
+  washLabel: z.string().min(1),
+  /** The 404 page (both modes), with sad Kristian. */
+  notFound: z.object({
+    title: z.string().min(1),
+    body: z.string().min(1),
+    home: z.string().min(1),
+  }),
+});
+
 export type ProjectFrontmatter = z.infer<typeof projectSchema>;
 export type Project = ProjectFrontmatter & { body: string };
 export type TimelineEntry = z.infer<typeof timelineEntrySchema>;
 export type Profile = z.infer<typeof profileSchema>;
+export type SkillGroup = z.infer<typeof skillGroupSchema>;
+export type FunCopy = z.infer<typeof funCopySchema>;
 
 /** Everything the two renderers need. Plain, serializable data only. */
 export interface SiteContent {
   profile: Profile;
   projects: Project[];
   timeline: TimelineEntry[];
+  skills: SkillGroup[];
+  fun: FunCopy;
 }

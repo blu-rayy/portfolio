@@ -1,4 +1,4 @@
-import type { Profile, Project, TimelineEntry } from '@/lib/content/schemas';
+import type { Profile, Project, SkillGroup, TimelineEntry } from '@/lib/content/schemas';
 
 // Unstyled content blocks used by BOTH renderers so a field can never exist in
 // only one mode. Anything that varies by mode (links vs window buttons) lives in
@@ -99,5 +99,27 @@ export function ProjectMeta({ project }: { project: Project }) {
         )}
       </ul>
     </>
+  );
+}
+
+export function SkillsBlock({ groups }: { groups: SkillGroup[] }) {
+  return (
+    <div>
+      {groups.map((g) => (
+        <section key={g.group} aria-label={g.group}>
+          <h3 className="section-label">
+            {g.group}
+            <PlaceholderBadge show={g.placeholder} />
+          </h3>
+          <ul className="chips">
+            {g.items.map((item) => (
+              <li key={item}>
+                <span className="chip">{item}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
   );
 }

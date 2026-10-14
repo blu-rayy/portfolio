@@ -3,10 +3,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import matter from 'gray-matter';
 import {
+  funCopySchema,
+  skillsSchema,
   profileSchema,
   projectSchema,
   timelineSchema,
+  type FunCopy,
   type Profile,
+  type SkillGroup,
   type Project,
   type SiteContent,
   type TimelineEntry,
@@ -70,6 +74,26 @@ export function loadProfile(): Profile {
   return parsed.data;
 }
 
+export function loadSkills(): SkillGroup[] {
+  const parsed = skillsSchema.safeParse(readJson('skills.json'));
+  if (!parsed.success)
+    throw new Error(`Invalid content/skills.json:\n${parsed.error.message}`);
+  return parsed.data;
+}
+
+export function loadFunCopy(): FunCopy {
+  const parsed = funCopySchema.safeParse(readJson('fun.json'));
+  if (!parsed.success)
+    throw new Error(`Invalid content/fun.json:\n${parsed.error.message}`);
+  return parsed.data;
+}
+
 export function loadSiteContent(): SiteContent {
-  return { profile: loadProfile(), projects: loadProjects(), timeline: loadTimeline() };
+  return {
+    profile: loadProfile(),
+    projects: loadProjects(),
+    timeline: loadTimeline(),
+    skills: loadSkills(),
+    fun: loadFunCopy(),
+  };
 }

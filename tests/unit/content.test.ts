@@ -2,7 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
 
-import { loadProfile, loadProjects, loadTimeline } from '@/lib/content/load';
+import {
+  loadFunCopy,
+  loadProfile,
+  loadProjects,
+  loadSkills,
+  loadTimeline,
+} from '@/lib/content/load';
 import { projectSchema } from '@/lib/content/schemas';
 
 describe('content', () => {
@@ -10,6 +16,8 @@ describe('content', () => {
     expect(loadProfile().name).toBeTruthy();
     expect(loadProjects().length).toBeGreaterThanOrEqual(2);
     expect(loadTimeline().length).toBeGreaterThanOrEqual(2);
+    expect(loadSkills().length).toBeGreaterThanOrEqual(1);
+    expect(loadFunCopy().osName).toBe('Home');
   });
 
   it('orders projects by episode', () => {

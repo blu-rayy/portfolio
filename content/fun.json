@@ -1,0 +1,29 @@
+{
+  "osName": "Home",
+  "welcome": {
+    "greeting": "hi, i'm kristian.",
+    "headline": "i build software.",
+    "intro": "computer science student, software engineering track. this desktop is my portfolio: open a window, drag things around, leave a note in the guestbook.",
+    "tip": "tip: everything lives in the dock below.",
+    "tipMascot": "too much? kristian can clean up.",
+    "photoAlt": "[photo]",
+    "buttons": {
+      "works": "see my works →",
+      "me": "about me",
+      "contact": "say hi"
+    }
+  },
+  "worksIntro": "everything i've built, broken and shipped. newest first.",
+  "sticky": "new commits\nmost fridays ☼",
+  "mascot": {
+    "name": "Kristian",
+    "bubble": "psst. too messy?\nclick me, i'll wash it."
+  },
+  "guestbook": "the guestbook is still being built. come back soon and leave a note ☼",
+  "washLabel": "wash this site ☼",
+  "notFound": {
+    "title": "404. nothing here.",
+    "body": "this page got washed away, or it never existed. kristian is just as upset about it as you are.",
+    "home": "← take me home"
+  }
+}

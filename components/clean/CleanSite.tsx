@@ -5,6 +5,7 @@ import {
   PlaceholderBadge,
   ProfileBlock,
   ProjectMeta,
+  SkillsBlock,
   TimelineBlock,
 } from '@/components/shared/blocks';
 import { CleanNav } from './CleanNav';
@@ -12,13 +13,14 @@ import { CleanNav } from './CleanNav';
 const NAV = [
   { href: '#about', label: 'About' },
   { href: '#projects', label: 'Projects' },
+  { href: '#skills', label: 'Skills' },
   { href: '#timeline', label: 'Timeline' },
   { href: '#contact', label: 'Contact' },
 ];
 
 /** Clean mode: a stacked, single-column page. Mobile-first. */
 export function CleanSite({ content }: { content: SiteContent }) {
-  const { profile, projects, timeline } = content;
+  const { profile, projects, timeline, skills } = content;
   return (
     <>
       <CleanNav name={profile.name} links={NAV} />
@@ -51,6 +53,11 @@ export function CleanSite({ content }: { content: SiteContent }) {
               </li>
             ))}
           </ul>
+        </section>
+
+        <section id="skills" aria-labelledby="skills-h" className="scroll-mt-20 py-6">
+          <h2 id="skills-h">Skills</h2>
+          <SkillsBlock groups={skills} />
         </section>
 
         <section id="timeline" aria-labelledby="timeline-h" className="scroll-mt-20 py-6">

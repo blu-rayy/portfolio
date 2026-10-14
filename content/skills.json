@@ -1,0 +1,17 @@
+[
+  {
+    "placeholder": true,
+    "group": "Languages",
+    "items": ["[Placeholder] TypeScript", "Java", "Python", "SQL"]
+  },
+  {
+    "placeholder": true,
+    "group": "Frameworks",
+    "items": ["[Placeholder] React", "Next.js", "Node.js"]
+  },
+  {
+    "placeholder": true,
+    "group": "Tools",
+    "items": ["[Placeholder] Git", "Figma", "Supabase", "Postman"]
+  }
+]
