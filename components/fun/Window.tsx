@@ -8,16 +8,20 @@ interface WindowProps {
   id: string;
   title: string;
   children: ReactNode;
+  /** Status bar under the white panel (counts, tips). */
+  status?: ReactNode;
   /** Move focus into the window when it becomes focused (skipped on first paint). */
   autoFocus: boolean;
 }
 
 /**
- * One window. Windowed (≥ lg): absolutely positioned from `--x/--y/--w/--h`,
- * draggable by its title bar. Compact (< lg): CSS makes it fill the desktop and
- * non-focused windows are hidden, so SSR output is already correct.
+ * One window: cream frame, title bar, white content panel ("well"), optional
+ * status bar. Windowed (≥ lg): positioned from `--x/--y/--w/--h` (or centred
+ * while `anchored`), draggable by the title bar. Compact (< lg): CSS makes it
+ * fill the desktop, hides unfocused windows and swaps close for "‹ back", so
+ * the server-rendered HTML is already right. Styles: styles/fun.css (.win).
  */
-export function Window({ id, title, children, autoFocus }: WindowProps) {
+export function Window({ id, title, children, status, autoFocus }: WindowProps) {
   const store = useWM();
   const win = useStore(store, (s) => s.windows[id]);
   const focused = useStore(store, (s) => s.focusedId === id);
@@ -62,6 +66,8 @@ export function Window({ id, title, children, autoFocus }: WindowProps) {
     '--y': `${win.y}px`,
     '--w': `${win.width}px`,
     '--h': `${win.height}px`,
+    '--ax': win.anchor?.x ?? 0,
+    '--ay': win.anchor?.y ?? 0,
   } as CSSProperties;
 
   return (
@@ -72,6 +78,7 @@ export function Window({ id, title, children, autoFocus }: WindowProps) {
       tabIndex={-1}
       data-window={id}
       data-focused={focused}
+      data-anchored={win.anchor !== null}
       style={style}
       onPointerDownCapture={() => dispatch({ type: 'focus', id })}
       onKeyDown={(e) => {
@@ -80,43 +87,47 @@ export function Window({ id, title, children, autoFocus }: WindowProps) {
           requestClose(id);
         }
       }}
-      className={[
-        'flex flex-col overflow-hidden border bg-(--color-surface) text-(--color-ink)',
-        // compact (default, < lg): fill the desktop; hide unfocused pre-hydration
-        'absolute inset-0 data-[focused=false]:hidden',
-        // windowed (>= lg)
-        'lg:inset-auto lg:top-(--y) lg:left-(--x) lg:h-(--h) lg:w-(--w) lg:max-h-full lg:max-w-full lg:data-[focused=false]:flex',
-      ].join(' ')}
+      className="win"
     >
       <div
         data-titlebar
-        className="flex items-center justify-between border-b lg:cursor-grab lg:touch-none"
+        className="win-titlebar"
         onPointerDown={onTitlePointerDown}
         onPointerMove={onTitlePointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
       >
-        <h2 id={titleId} className="px-3 select-none">
-          {title}
-        </h2>
-        <div className="flex">
+        {/* windowed: close (there is deliberately no minimise) */}
+        <div className="flex gap-1.5 max-lg:hidden">
           <button
             type="button"
-            aria-label={`Minimize ${title}`}
-            onClick={() => dispatch({ type: 'minimize', id })}
-          >
-            –
-          </button>
-          <button
-            type="button"
+            className="win-btn"
             aria-label={`Close ${title}`}
             onClick={() => requestClose(id)}
           >
-            ×
+            <svg aria-hidden="true" width="10" height="10" viewBox="0 0 10 10">
+              <path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" strokeWidth="1.6" />
+            </svg>
           </button>
         </div>
+        {/* compact: back (the phone's back gesture does the same) */}
+        <button
+          type="button"
+          className="win-back lg:hidden"
+          aria-label={`Back from ${title}`}
+          onClick={() => requestClose(id)}
+        >
+          <svg aria-hidden="true" width="10" height="16" viewBox="0 0 10 16">
+            <path d="M8 2L2 8l6 6" fill="none" stroke="currentColor" strokeWidth="2" />
+          </svg>
+          back
+        </button>
+        <h2 id={titleId} className="win-title">
+          {title}
+        </h2>
       </div>
-      <div className="min-h-0 flex-1 overflow-auto p-4">{children}</div>
+      <div className="well">{children}</div>
+      {status ? <div className="win-status">{status}</div> : null}
     </section>
   );
 }

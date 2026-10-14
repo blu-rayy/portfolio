@@ -1,31 +1,36 @@
 @import 'tailwindcss';
 @import './tokens.css';
+/* components layer: Tailwind utilities (lg:hidden, ...) can still override it */
+@import './fun.css' layer(components);
 
-/* Minimal base only: real styling comes later. */
-html {
-  background: var(--color-bg);
-  color: var(--color-ink);
-  font-family: var(--font-body);
-  -webkit-text-size-adjust: 100%;
-}
+/* Base (lowest layer). Mode-specific styling lives in fun.css (and later clean.css). */
+@layer base {
+  html {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    -webkit-text-size-adjust: 100%;
+  }
 
-body {
-  margin: 0;
-  min-height: 100dvh;
-}
+  body {
+    margin: 0;
+    min-height: 100dvh;
+  }
 
-/* Visible focus everywhere until the design pass defines it. */
-:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
+  /* Visible focus everywhere: 3px orange ring (Foundations §10). */
+  :focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 3px;
+  }
 
-/* Touch targets: every interactive control is at least 44x44. */
-button,
-[role='button'],
-a.touch {
-  min-height: 44px;
-  min-width: 44px;
+  /* Touch targets: every interactive control is at least 44x44 (components
+     may opt out for desktop-only pointer controls, e.g. window buttons). */
+  button,
+  [role='button'],
+  a.touch {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

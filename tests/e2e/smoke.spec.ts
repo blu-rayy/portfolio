@@ -7,15 +7,15 @@ test.describe('fun mode (Kris OS)', () => {
     await page.goto('/');
     await expect(page.locator('html')).toHaveAttribute('data-mode', 'fun');
 
-    await page.locator('[data-dock-item="about"]').click();
-    const about = page.getByRole('dialog', { name: 'About' });
-    await expect(about).toBeVisible();
-    await expect(page).toHaveURL(/window=about/);
+    await page.locator('[data-dock-item="me"]').click();
+    const me = page.getByRole('dialog', { name: 'Me', exact: true });
+    await expect(me).toBeVisible();
+    await expect(page).toHaveURL(/window=me/);
     // Focus moves into the window.
-    await expect(about).toBeFocused();
+    await expect(me).toBeFocused();
 
     await page.goBack();
-    await expect(about).toBeHidden();
+    await expect(me).toBeHidden();
     await expect(page).not.toHaveURL(/window=/);
     // We stayed on the site.
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
@@ -23,8 +23,8 @@ test.describe('fun mode (Kris OS)', () => {
 
   test('Escape closes the focused window', async ({ page }) => {
     await page.goto('/');
-    await page.locator('[data-dock-item="timeline"]').click();
-    const win = page.getByRole('dialog', { name: 'Timeline' });
+    await page.locator('[data-dock-item="skills"]').click();
+    const win = page.getByRole('dialog', { name: 'Skills' });
     await expect(win).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(win).toBeHidden();
@@ -39,20 +39,18 @@ test.describe('fun mode (Kris OS)', () => {
   });
 
   test('?window= deep link opens the window', async ({ page }) => {
-    await page.goto('/?window=episodes');
-    await expect(page.getByRole('dialog', { name: 'Episodes' })).toBeVisible();
+    await page.goto('/?window=works');
+    await expect(page.getByRole('dialog', { name: 'Works' })).toBeVisible();
   });
 
-  test('opening a project from Episodes, then back, returns to Episodes', async ({
-    page,
-  }) => {
+  test('opening a project from Works, then back, returns to Works', async ({ page }) => {
     await page.goto('/');
-    await page.locator('[data-dock-item="episodes"]').click();
+    await page.locator('[data-dock-item="works"]').click();
     await page.getByRole('link', { name: /First Project/ }).click();
     await expect(page).toHaveURL(/\/work\/first-project/);
     await page.goBack();
     await expect(page.getByRole('dialog', { name: /First Project/ })).toBeHidden();
-    await expect(page.getByRole('dialog', { name: 'Episodes' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Works' })).toBeVisible();
   });
 
   test('windowed shows all open windows, compact shows one; nothing is lost on resize', async ({
@@ -60,21 +58,28 @@ test.describe('fun mode (Kris OS)', () => {
     isMobile,
   }) => {
     await page.goto('/');
-    await page.locator('[data-dock-item="about"]').click();
-    await page.locator('[data-dock-item="timeline"]').click();
+    await page.locator('[data-dock-item="me"]').click();
+    await page.locator('[data-dock-item="skills"]').click();
 
     if (isMobile) {
       await expect(dialogs(page)).toHaveCount(1);
-      await expect(page.getByRole('dialog', { name: 'Timeline' })).toBeVisible();
+      await expect(page.getByRole('dialog', { name: 'Skills' })).toBeVisible();
     } else {
-      await expect(dialogs(page)).toHaveCount(2);
+      // WELCOME.TXT is open on desktop from the first visit.
+      await expect(dialogs(page)).toHaveCount(3);
       const size = page.viewportSize()!;
       await page.setViewportSize({ width: 600, height: size.height });
       await expect(dialogs(page)).toHaveCount(1);
-      await expect(page.getByRole('dialog', { name: 'Timeline' })).toBeVisible();
+      await expect(page.getByRole('dialog', { name: 'Skills' })).toBeVisible();
       await page.setViewportSize(size);
-      await expect(dialogs(page)).toHaveCount(2);
+      await expect(dialogs(page)).toHaveCount(3);
     }
+  });
+
+  test('kristian washes the site', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: /: wash this site/ }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-mode', 'clean');
   });
 
   test('touch targets are at least 44px', async ({ page }) => {
@@ -88,9 +93,11 @@ test.describe('fun mode (Kris OS)', () => {
 });
 
 test.describe('mode switching', () => {
-  test('wash switches to clean and back', async ({ page }) => {
+  test('wash switches to clean and back', async ({ page, isMobile }) => {
     await page.goto('/');
-    await page.getByTestId('mode-switch').click();
+    // Desktop has the menu-bar button; on phones Kristian is the way in.
+    if (isMobile) await page.getByRole('button', { name: /wash this site/ }).click();
+    else await page.getByTestId('mode-switch').click();
     await expect(page.locator('html')).toHaveAttribute('data-mode', 'clean');
     await expect(page).toHaveURL(/mode=clean/);
 
@@ -158,6 +165,19 @@ test.describe('clean mode', () => {
     );
     expect(overflow).toBe(false);
   });
+});
+
+test.describe('404', () => {
+  for (const path of ['/work/does-not-exist', '/no/such/page']) {
+    test(`${path} shows sad Kristian in the mode layout`, async ({ page }) => {
+      const res = await page.goto(path);
+      expect(res?.status()).toBe(404);
+      await expect(page.locator('html')).toHaveAttribute('data-mode', /fun|clean/);
+      await expect(page.getByRole('img', { name: /404 sign/ })).toBeVisible();
+      await page.getByRole('link', { name: /take me home/ }).click();
+      await expect(page).toHaveURL(/\/$/);
+    });
+  }
 });
 
 test('sitemap and robots are served', async ({ request }) => {

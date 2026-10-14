@@ -22,16 +22,12 @@ function setup() {
 }
 
 describe('Dock', () => {
-  it('opens a window on click, restores a minimized one, focuses an open one', async () => {
+  it('opens a window on click, then focuses an already-open one', async () => {
     const user = userEvent.setup();
     const store = setup();
 
     await user.click(screen.getByRole('button', { name: 'About' }));
     expect(store.getState().focusedId).toBe('about');
-
-    store.getState().dispatch({ type: 'minimize', id: 'about' });
-    await user.click(screen.getByRole('button', { name: /About/ }));
-    expect(store.getState().windows.about?.minimized).toBe(false);
 
     await user.click(screen.getByRole('button', { name: 'Timeline' }));
     await user.click(screen.getByRole('button', { name: /About/ }));

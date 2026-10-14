@@ -5,8 +5,9 @@ One content source, two renderers:
 - **fun** ("Kris OS"): a retro desktop UI with draggable windows and a dock.
 - **clean**: a modern, recruiter-friendly single page.
 
-This repo is the _foundation only_ (architecture, content, mode system, window
-manager, mobile support, tooling). There is intentionally no visual design yet.
+Fun mode is designed: a Y2K desktop called "Home" (sky, hand-drawn clouds and
+sun, cream windows with a white content well, dock, Kristian peeking from the
+corner). Clean mode is still unstyled.
 
 ## Run it
 
@@ -44,7 +45,9 @@ lib/wm/                window manager: reducer, selectors, store, URL + history 
 components/fun/        Kris OS renderer (client components)
 components/clean/      clean renderer (server components + a small nav)
 components/shared/     content blocks both renderers use, ModeSwitch
-styles/tokens.css      design tokens per [data-mode]
+components/fun/art/    hand-drawn SVG art: Sky (clouds, sun), Kristian (8 moods), icons
+styles/tokens.css      palette + semantic tokens per [data-mode]
+styles/fun.css         fun-mode component styles (in the `components` layer)
 tests/unit, tests/e2e
 ```
 
@@ -103,7 +106,8 @@ and JS share the boundary (`lib/wm/layout.ts`), so there's no flash or jump.
 
 **URL and history.** Opening a window `pushState`s an entry that remembers what
 it opened (`lib/wm/history-sync.ts`). Back closes that window, forward reopens
-it, focus changes use `replaceState`. `/?window=about|episodes|timeline` and
+it, focus changes use `replaceState`. WELCOME.TXT is the home window and lives
+at the bare `/`; on phones it is the home screen instead of a window. `/?window=works|me|skills|guestbook|contact` and
 `/work/[slug]` deep-link into windows; `/work/[slug]` is server-rendered with the
 window open (full-screen on phones). `?window=` is applied on the client, so `/`
 stays static.
@@ -112,8 +116,26 @@ stays static.
 because Next remounts the desktop when history crosses `/` ↔ `/work/[slug]`.
 The server always builds a fresh store.
 
+## Kristian's moods
+
+`components/fun/art/Kristian.tsx` draws him full body (`<Kristian mood>`) or
+peeking over the bottom edge (`<KristianPeek mood>`). Moods and where they're
+used:
+
+| mood      | used for                                                        |
+| --------- | --------------------------------------------------------------- |
+| idle      | resting in the corner (the peek uses a curious look-up face)    |
+| happy     | hovering / focusing Kristian                                    |
+| sleepy    | no input for 60s (`SLEEP_AFTER_MS`); any input wakes him        |
+| surprised | clicked, for a beat before the wash starts                      |
+| sad       | the 404 page (`app/[mode]/not-found.tsx`)                       |
+| vacuuming | the wash animation (not built yet; `data-nozzle` marks the tip) |
+| done      | wash finished (not built yet)                                   |
+| confused  | form errors (the guestbook form, not built yet)                 |
+
 ## Not done yet (by design)
 
-Visual design, fonts, images, mascot, the wash animation (lazy-load it with
+Clean-mode design, real photos/thumbnails, final mascot art (Kristian is
+placeholder SVG in `components/fun/art/Kristian.tsx`), the wash animation (lazy-load it with
 `import()` inside a `registerTransitionEffect`), guestbook, deployment.
 `/resume.pdf` is referenced by the profile but not shipped yet.

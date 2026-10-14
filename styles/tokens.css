@@ -1,45 +1,94 @@
 /*
- * Design tokens: structure only. Real values come with the visual design pass.
- * Names are semantic and shared by both modes; each mode supplies its own
- * values. Use them in markup as e.g. `bg-(--color-bg)` / `text-(--color-ink)`.
+ * Design tokens (see the Foundations sheet). Names are semantic and shared by
+ * both modes; each mode supplies its own values. Use them in markup as e.g.
+ * `bg-(--color-surface)` / `text-(--color-ink)`.
+ *
+ * Palette: pulled from the blue/orange impasto wallpaper. Orange is a
+ * spotlight, never a background. Text on orange is always ink, never white.
  */
 
+:root {
+  /* sky */
+  --sky-900: #0e3a78;
+  --sky-700: #1b4f9c;
+  --sky-500: #2a6fc9;
+  --sky-400: #5e9bdd;
+  --sky-300: #8dbbe8;
+  --sky-100: #dce8f6;
+  --haze: #bfd9f2;
+
+  /* paper + ink */
+  --cream: #fbf4e8;
+  --paper: #ffffff;
+  --desk: #f1e6d2;
+  --cloud: #f6ebd8;
+  --ink: #111111;
+  --ink-navy: #14213d;
+  --ink-soft: #3a4a6b;
+
+  /* accents (use sparingly) */
+  --orange: #f08a3c;
+  --orange-deep: #e0702a;
+  --orange-soft: #f7b27a;
+  --peach: #ffe8c7;
+  --scribble: #e00000;
+
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-pixel: 'Pixelify Sans', ui-monospace, monospace;
+  --font-system: 'Silkscreen', ui-monospace, monospace;
+  --font-hand: 'Gaegu', 'Comic Sans MS', cursive;
+  --font-sans: 'Instrument Sans', system-ui, sans-serif;
+}
+
 [data-mode='fun'] {
-  --color-bg: #d8d8d8;
-  --color-surface: #ffffff;
-  --color-ink: #111111;
-  --color-primary: #3355ff;
-  --color-accent: #ff3388;
+  --color-bg: var(--sky-500);
+  --color-surface: var(--cream);
+  --color-well: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-body: var(--ink-navy);
+  --color-ink-soft: var(--ink-soft);
+  --color-primary: var(--sky-700);
+  --color-accent: var(--orange);
+  --color-accent-soft: var(--orange-soft);
 
-  --font-display: system-ui, sans-serif;
-  --font-body: system-ui, sans-serif;
-  --font-ui: system-ui, sans-serif;
+  --font-display: var(--font-serif);
+  --font-body: var(--font-pixel);
+  --font-ui: var(--font-system);
 
-  --radius-sm: 0;
-  --radius-md: 0;
-  --radius-lg: 0;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 12px;
 
-  --shadow-sm: none;
-  --shadow-md: none;
-  --shadow-lg: none;
+  /* bevel: 1px white highlight + 1px ink drop line */
+  --shadow-sm: inset 0 1px 0 #fff, 0 1px 0 var(--ink);
+  /* hard offset shadow for windows, dock and notes */
+  --shadow-md: inset 0 1px 0 #fff, 0 1px 0 var(--ink), 6px 8px 0 rgb(10 30 70 / 0.35);
+  --shadow-lg: inset 0 1px 0 #fff, 0 1px 0 var(--ink), 10px 12px 0 rgb(10 30 70 / 0.35);
+  /* recessed content well */
+  --shadow-well: inset 0 2px 0 rgb(17 17 17 / 0.08), inset 2px 0 0 rgb(17 17 17 / 0.05);
 }
 
 [data-mode='clean'] {
-  --color-bg: #fafafa;
-  --color-surface: #ffffff;
-  --color-ink: #1a1a1a;
-  --color-primary: #1f4fd8;
-  --color-accent: #d81f6a;
+  --color-bg: var(--cream);
+  --color-surface: var(--paper);
+  --color-well: var(--paper);
+  --color-ink: var(--ink-navy);
+  --color-ink-body: var(--ink-navy);
+  --color-ink-soft: var(--ink-soft);
+  --color-primary: var(--sky-700);
+  --color-accent: var(--orange);
+  --color-accent-soft: var(--orange-soft);
 
-  --font-display: system-ui, sans-serif;
-  --font-body: system-ui, sans-serif;
-  --font-ui: system-ui, sans-serif;
+  --font-display: var(--font-serif);
+  --font-body: var(--font-sans);
+  --font-ui: var(--font-sans);
 
-  --radius-sm: 0;
-  --radius-md: 0;
-  --radius-lg: 0;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
 
   --shadow-sm: none;
-  --shadow-md: none;
-  --shadow-lg: none;
+  --shadow-md: 0 1px 2px rgb(20 33 61 / 0.08);
+  --shadow-lg: 0 8px 24px rgb(20 33 61 / 0.1);
+  --shadow-well: none;
 }

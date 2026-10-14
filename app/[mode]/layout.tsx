@@ -5,6 +5,15 @@ import { ModeRoot } from '@/components/shared/ModeRoot';
 import { loadProfile } from '@/lib/content/load';
 import { MODES, parseMode } from '@/lib/mode/mode';
 import { SITE_URL } from '@/lib/site';
+// Self-hosted fonts (no request to Google at runtime or build time).
+import '@fontsource/instrument-serif/latin-400.css';
+import '@fontsource/instrument-serif/latin-400-italic.css';
+import '@fontsource/instrument-sans/latin-400.css';
+import '@fontsource/instrument-sans/latin-600.css';
+import '@fontsource/pixelify-sans/latin-400.css';
+import '@fontsource/pixelify-sans/latin-600.css';
+import '@fontsource/silkscreen/latin-400.css';
+import '@fontsource/gaegu/latin-700.css';
 import '@/styles/globals.css';
 
 // The mode is a route segment: `proxy.ts` rewrites every request to /fun/* or
@@ -29,6 +38,7 @@ export function generateMetadata(): Metadata {
     title: { default: name, template: `%s | ${name}` },
     description: tagline,
     alternates: { canonical: '/' },
+    icons: { icon: '/favicon.svg' },
   };
 }
 

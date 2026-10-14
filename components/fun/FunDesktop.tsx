@@ -1,49 +1,67 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useStore } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import type { SiteContent } from '@/lib/content/schemas';
 import { ModeSwitch } from '@/components/shared/ModeSwitch';
-import {
-  ContactBlock,
-  PlaceholderBadge,
-  ProfileBlock,
-  ProjectMeta,
-  TimelineBlock,
-} from '@/components/shared/blocks';
 import { attachHistorySync } from '@/lib/wm/history-sync';
 import { COMPACT_MEDIA_QUERY } from '@/lib/wm/layout';
 import { createInitialState, wmReducer } from '@/lib/wm/reducer';
 import { selectRenderedWindowIds } from '@/lib/wm/selectors';
-import { getWMStore } from '@/lib/wm/store';
+import { getWMStore, withDefaults } from '@/lib/wm/store';
 import {
+  DOCK_LABELS,
+  HOME_WINDOW_ID,
   projectSlugFromWindowId,
-  projectWindowId,
   STATIC_WINDOW_IDS,
   WINDOW_TITLES,
 } from '@/lib/wm/windows';
+import { Sky } from './art/Sky';
+import { AppIcon, SunGlyph } from './art/icons';
+import { Clock } from './Clock';
+import { KristianCorner } from './KristianCorner';
 import { Dock, type DockItem } from './Dock';
 import { Window } from './Window';
+import {
+  ContactContent,
+  GuestbookContent,
+  MeContent,
+  ProjectContent,
+  SkillsContent,
+  WelcomeContent,
+  WorksContent,
+} from './WindowContents';
 import { WMContext } from './WMContext';
 
 interface FunDesktopProps {
   content: SiteContent;
   /** Pre-rendered MDX bodies (server components), keyed by project slug. */
   bodies: Record<string, ReactNode>;
-  /** Window to open on first render, e.g. for the `/work/[slug]` deep link. */
+  /**
+   * Window to open on first render, e.g. for the `/work/[slug]` deep link.
+   * Defaults to the home window (WELCOME.TXT) on `/`.
+   */
   initialWindowId?: string | null;
 }
 
-export function FunDesktop({ content, bodies, initialWindowId = null }: FunDesktopProps) {
-  const { profile, projects, timeline } = content;
+export function FunDesktop({
+  content,
+  bodies,
+  initialWindowId = HOME_WINDOW_ID,
+}: FunDesktopProps) {
+  const { profile, projects, fun } = content;
   const slugs = useMemo(() => projects.map((p) => p.slug), [projects]);
 
   // Seed state identically on server and client so hydration matches.
   const [store] = useState(() =>
     getWMStore(
       initialWindowId
-        ? wmReducer(createInitialState(), { type: 'open', id: initialWindowId })
+        ? wmReducer(
+            createInitialState(),
+            withDefaults({ type: 'open', id: initialWindowId }),
+          )
         : {},
     ),
   );
@@ -52,7 +70,13 @@ export function FunDesktop({ content, bodies, initialWindowId = null }: FunDeskt
   const [initialIds] = useState(() => new Set(Object.keys(store.getState().windows)));
 
   const mainRef = useRef<HTMLElement>(null);
+  const layout = useStore(store, (s) => s.layout);
   const renderedIds = useStore(store, useShallow(selectRenderedWindowIds));
+  // On phones the home window *is* the home screen, not a full-screen window.
+  const windowIds =
+    layout === 'compact'
+      ? renderedIds.filter((id) => id !== HOME_WINDOW_ID)
+      : renderedIds;
 
   // URL <-> windows, and viewport/layout sync. All client-only, after mount.
   useEffect(() => attachHistorySync(store, { projectSlugs: slugs }), [store, slugs]);
@@ -82,11 +106,10 @@ export function FunDesktop({ content, bodies, initialWindowId = null }: FunDeskt
   }, [store]);
 
   const openIds = useStore(store, (s) => s.order);
-  const focusedId = useStore(store, (s) => s.focusedId);
   const open = (id: string) => store.getState().dispatch({ type: 'open', id });
 
   const dockItems: DockItem[] = [
-    ...STATIC_WINDOW_IDS.map((id) => ({ id: id as string, label: WINDOW_TITLES[id] })),
+    ...STATIC_WINDOW_IDS.map((id) => ({ id: id as string, label: DOCK_LABELS[id] })),
     ...openIds
       .filter((id) => projectSlugFromWindowId(id) !== null)
       .map((id) => ({
@@ -95,7 +118,6 @@ export function FunDesktop({ content, bodies, initialWindowId = null }: FunDeskt
       })),
   ];
 
-  const focusedTitle = focusedId ? titleFor(focusedId) : null;
   function titleFor(id: string): string {
     const slug = projectSlugFromWindowId(id);
     if (slug) return projects.find((p) => p.slug === slug)?.title ?? id;
@@ -106,90 +128,131 @@ export function FunDesktop({ content, bodies, initialWindowId = null }: FunDeskt
     const slug = projectSlugFromWindowId(id);
     if (slug) {
       const p = projects.find((x) => x.slug === slug);
-      if (!p) return null;
-      return (
-        <article>
-          <p>
-            {p.summary}
-            <PlaceholderBadge show={p.placeholder} />
-          </p>
-          <ProjectMeta project={p} />
-          {bodies[p.slug]}
-        </article>
-      );
+      return p ? <ProjectContent project={p} body={bodies[p.slug]} /> : null;
     }
     switch (id) {
-      case 'about':
-        return (
-          <>
-            <ProfileBlock profile={profile} />
-            <h3>Elsewhere</h3>
-            <ContactBlock profile={profile} />
-          </>
-        );
-      case 'episodes':
-        return (
-          <ul>
-            {projects.map((p) => (
-              <li key={p.slug}>
-                <h3>
-                  {/* A real link (middle-click, copy address), upgraded to open a window. */}
-                  <a
-                    href={`/work/${p.slug}`}
-                    className="inline-flex items-center py-2"
-                    onClick={(e) => {
-                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-                      e.preventDefault();
-                      open(projectWindowId(p.slug));
-                    }}
-                  >
-                    {p.title}
-                  </a>
-                </h3>
-                <p>{p.summary}</p>
-                <ProjectMeta project={p} />
-              </li>
-            ))}
-          </ul>
-        );
-      case 'timeline':
-        return <TimelineBlock entries={timeline} />;
+      case 'welcome':
+        return <WelcomeContent content={content} open={open} />;
+      case 'works':
+        return <WorksContent content={content} open={open} />;
+      case 'me':
+        return <MeContent content={content} />;
+      case 'skills':
+        return <SkillsContent content={content} />;
+      case 'guestbook':
+        return <GuestbookContent content={content} />;
+      case 'contact':
+        return <ContactContent content={content} />;
       default:
         return null;
     }
   }
 
+  function statusFor(id: string): ReactNode {
+    if (id === 'welcome')
+      return (
+        <>
+          <span>{fun.welcome.tip}</span>
+          <span>{fun.welcome.tipMascot}</span>
+        </>
+      );
+    if (id === 'works') return <span>[{projects.length}] works</span>;
+    return null;
+  }
+
+  // Phone home screen apps: every window except home, plus résumé / GitHub links.
+  const github = profile.socials.find((s) => /github/i.test(s.label));
+
   return (
     <WMContext.Provider value={store}>
-      <div className="flex h-dvh flex-col overflow-hidden">
-        <header className="flex shrink-0 items-center justify-between gap-2 border-b bg-(--color-surface) pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
-          <span className="px-3 font-bold">Kris OS</span>
-          <span className="truncate" aria-live="polite">
-            {focusedTitle}
-          </span>
-          <ModeSwitch />
+      <div className="desk">
+        <Sky />
+
+        <header className="menubar">
+          <Link href="/" className="menubar-logo">
+            <SunGlyph />
+            {fun.osName}
+          </Link>
+          <div className="flex items-stretch">
+            <ModeSwitch
+              className="menubar-wash max-lg:hidden"
+              washLabel={fun.washLabel}
+            />
+            <Clock />
+          </div>
         </header>
 
-        <main id="main" tabIndex={-1} ref={mainRef} className="relative min-h-0 flex-1">
-          <div className="h-full overflow-auto p-4">
-            <h1>
-              {profile.name}
-              <PlaceholderBadge show={profile.placeholder} />
-            </h1>
-            <p>{profile.tagline}</p>
-            <ul aria-label="Desktop">
-              {STATIC_WINDOW_IDS.map((id) => (
+        <KristianCorner name={fun.mascot.name} bubble={fun.mascot.bubble} />
+
+        <main id="main" tabIndex={-1} ref={mainRef} className="desk-main">
+          {/* phone home screen (compact only; CSS hides it on wide screens) */}
+          <div className="home lg:hidden">
+            <section className="home-card" aria-labelledby="home-card-title">
+              <div className="home-card-bar">
+                <span id="home-card-title" className="win-title !text-[13px]">
+                  {WINDOW_TITLES.welcome}
+                </span>
+              </div>
+              <div className="well">
+                {/* Only one of the two h1s is ever rendered visible (CSS breakpoint). */}
+                <WelcomeContent content={content} open={open} />
+              </div>
+            </section>
+            <ul className="apps" aria-label="Apps">
+              {STATIC_WINDOW_IDS.filter((id) => id !== HOME_WINDOW_ID).map((id) => (
                 <li key={id}>
-                  <button type="button" className="px-3" onClick={() => open(id)}>
-                    {WINDOW_TITLES[id]}
+                  <button type="button" className="app" onClick={() => open(id)}>
+                    <span className="app-tile">
+                      <AppIcon id={id} size={28} />
+                    </span>
+                    {DOCK_LABELS[id]}
                   </button>
                 </li>
               ))}
+              <li>
+                <a className="app" href={profile.resume}>
+                  <span className="app-tile">
+                    <AppIcon id="project" size={28} />
+                  </span>
+                  résumé
+                </a>
+              </li>
+              {github ? (
+                <li>
+                  <a className="app" href={github.url} rel="noopener noreferrer">
+                    <span className="app-tile">
+                      <svg
+                        aria-hidden="true"
+                        width="28"
+                        height="28"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      >
+                        <path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13 6l-2 12" />
+                      </svg>
+                    </span>
+                    github
+                  </a>
+                </li>
+              ) : null}
             </ul>
           </div>
 
-          {renderedIds.map((id) => (
-            <Window key={id} id={id} title={titleFor(id)} autoFocus={!initialIds.has(id)}>
+          <p className="sticky" aria-hidden="true">
+            {fun.sticky}
+          </p>
+
+          {windowIds.map((id) => (
+            <Window
+              key={id}
+              id={id}
+              title={titleFor(id)}
+              status={statusFor(id)}
+              autoFocus={!initialIds.has(id)}
+            >
               {contentFor(id)}
             </Window>
           ))}
