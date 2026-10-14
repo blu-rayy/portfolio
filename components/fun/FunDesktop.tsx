@@ -19,7 +19,7 @@ import {
   WINDOW_TITLES,
 } from '@/lib/wm/windows';
 import { Sky } from './art/Sky';
-import { AppIcon, SunGlyph } from './art/icons';
+import { SunGlyph } from './art/icons';
 import { Clock } from './Clock';
 import { KristianCorner } from './KristianCorner';
 import { Dock, type DockItem } from './Dock';
@@ -51,7 +51,7 @@ export function FunDesktop({
   bodies,
   initialWindowId = HOME_WINDOW_ID,
 }: FunDesktopProps) {
-  const { profile, projects, fun } = content;
+  const { projects, fun } = content;
   const slugs = useMemo(() => projects.map((p) => p.slug), [projects]);
 
   // Seed state identically on server and client so hydration matches.
@@ -160,9 +160,6 @@ export function FunDesktop({
     return null;
   }
 
-  // Phone home screen apps: every window except home, plus résumé / GitHub links.
-  const github = profile.socials.find((s) => /github/i.test(s.label));
-
   return (
     <WMContext.Provider value={store}>
       <div className="desk">
@@ -198,47 +195,6 @@ export function FunDesktop({
                 <WelcomeContent content={content} open={open} />
               </div>
             </section>
-            <ul className="apps" aria-label="Apps">
-              {STATIC_WINDOW_IDS.filter((id) => id !== HOME_WINDOW_ID).map((id) => (
-                <li key={id}>
-                  <button type="button" className="app" onClick={() => open(id)}>
-                    <span className="app-tile">
-                      <AppIcon id={id} size={28} />
-                    </span>
-                    {DOCK_LABELS[id]}
-                  </button>
-                </li>
-              ))}
-              <li>
-                <a className="app" href={profile.resume}>
-                  <span className="app-tile">
-                    <AppIcon id="project" size={28} />
-                  </span>
-                  résumé
-                </a>
-              </li>
-              {github ? (
-                <li>
-                  <a className="app" href={github.url} rel="noopener noreferrer">
-                    <span className="app-tile">
-                      <svg
-                        aria-hidden="true"
-                        width="28"
-                        height="28"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                      >
-                        <path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13 6l-2 12" />
-                      </svg>
-                    </span>
-                    github
-                  </a>
-                </li>
-              ) : null}
-            </ul>
           </div>
 
           <p className="sticky" aria-hidden="true">

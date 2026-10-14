@@ -1,4 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+
+const profile = JSON.parse(readFileSync('content/profile.json', 'utf8')) as {
+  name: string;
+};
 
 const dialogs = (page: import('@playwright/test').Page) => page.getByRole('dialog');
 
@@ -122,7 +127,7 @@ test.describe('mode switching', () => {
 test.describe('clean mode', () => {
   test('renders all content', async ({ page }) => {
     await page.goto('/?mode=clean');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Your Name');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(profile.name);
     await expect(page.getByRole('heading', { name: 'Projects' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Timeline' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Contact' })).toBeVisible();
