@@ -1,4 +1,5 @@
 import { createStore, type StoreApi } from 'zustand/vanilla';
+import { windowDefaultsFor } from './windows';
 import {
   createInitialState,
   wmReducer,
@@ -18,12 +19,29 @@ export interface WMStoreState extends WMState {
 
 export type WMStore = StoreApi<WMStoreState>;
 
+/**
+ * Every window has a preferred size/placement (see `windowDefaultsFor`). Callers
+ * (dock, history sync, links) just say "open works"; this fills in the rest.
+ * Explicit values in the action always win.
+ */
+export function withDefaults(action: WMAction): WMAction {
+  if (action.type !== 'open') return action;
+  const d = windowDefaultsFor(action.id);
+  const placed = action.x !== undefined || action.y !== undefined;
+  return {
+    ...action,
+    width: action.width ?? d.width,
+    height: action.height ?? d.height,
+    anchor: action.anchor ?? (placed ? undefined : (d.anchor ?? undefined)),
+  };
+}
+
 export function createWMStore(initial: Partial<WMState> = {}): WMStore {
   return createStore<WMStoreState>()((set, get) => ({
     ...createInitialState(initial),
     dispatch: (action) =>
       set((state) => {
-        const next = wmReducer(state, action);
+        const next = wmReducer(state, withDefaults(action));
         return next === state ? state : next;
       }),
     requestClose: (id) => get().dispatch({ type: 'close', id }),

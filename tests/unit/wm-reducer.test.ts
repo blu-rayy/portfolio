@@ -34,10 +34,9 @@ describe('open', () => {
     expect(s.windows.b!.y).toBeGreaterThan(s.windows.a!.y);
   });
 
-  it('re-opening raises and restores instead of duplicating', () => {
-    const s = run([open('a'), open('b'), { type: 'minimize', id: 'a' }, open('a')]);
+  it('re-opening raises instead of duplicating', () => {
+    const s = run([open('a'), open('b'), open('a')]);
     expect(s.order).toEqual(['b', 'a']);
-    expect(s.windows.a!.minimized).toBe(false);
     expect(s.focusedId).toBe('a');
     expect(Object.keys(s.windows)).toHaveLength(2);
   });
@@ -55,17 +54,6 @@ describe('close', () => {
     const s = run([open('a'), open('b'), open('c'), { type: 'close', id: 'c' }]);
     expect(s.order).toEqual(['a', 'b']);
     expect(s.focusedId).toBe('b');
-  });
-
-  it('skips minimized windows when choosing the next focus', () => {
-    const s = run([
-      open('a'),
-      open('b'),
-      open('c'),
-      { type: 'minimize', id: 'b' },
-      { type: 'close', id: 'c' },
-    ]);
-    expect(s.focusedId).toBe('a');
   });
 
   it('leaves focus alone when closing an unfocused window', () => {
@@ -97,36 +85,9 @@ describe('focus', () => {
     expect(wmReducer(s, { type: 'focus', id: 'b' })).toBe(s);
   });
 
-  it('ignores minimized and unknown windows', () => {
-    const s = run([open('a'), open('b'), { type: 'minimize', id: 'a' }]);
-    expect(wmReducer(s, { type: 'focus', id: 'a' })).toBe(s);
+  it('ignores unknown windows', () => {
+    const s = run([open('a'), open('b')]);
     expect(wmReducer(s, { type: 'focus', id: 'nope' })).toBe(s);
-  });
-});
-
-describe('minimize / restore', () => {
-  it('minimizing the focused window focuses the next visible one', () => {
-    const s = run([open('a'), open('b'), { type: 'minimize', id: 'b' }]);
-    expect(s.windows.b!.minimized).toBe(true);
-    expect(s.focusedId).toBe('a');
-  });
-
-  it('minimizing the only window leaves nothing focused but keeps it open', () => {
-    const s = run([open('a'), { type: 'minimize', id: 'a' }]);
-    expect(s.focusedId).toBeNull();
-    expect(s.windows.a).toBeDefined();
-  });
-
-  it('restore un-minimizes, raises and focuses', () => {
-    const s = run([
-      open('a'),
-      open('b'),
-      { type: 'minimize', id: 'a' },
-      { type: 'restore', id: 'a' },
-    ]);
-    expect(s.windows.a!.minimized).toBe(false);
-    expect(s.order.at(-1)).toBe('a');
-    expect(s.focusedId).toBe('a');
   });
 });
 
@@ -206,8 +167,8 @@ describe('compact layout', () => {
     expect(selectRenderedWindowIds(s)).toEqual(['a']);
   });
 
-  it('renders nothing (home screen) when everything is minimized or closed', () => {
-    const s = compact([open('a'), { type: 'minimize', id: 'a' }]);
+  it('renders nothing (home screen) when everything is closed', () => {
+    const s = compact([open('a'), { type: 'close', id: 'a' }]);
     expect(selectRenderedWindowIds(s)).toEqual([]);
   });
 
@@ -231,5 +192,79 @@ describe('compact layout', () => {
       { type: 'setViewport', viewport: { width: 390, height: 700 } },
     ]);
     expect(s.windows.a!.x).toBe(90);
+  });
+});
+
+describe('anchored windows', () => {
+  const vp = (width: number, height: number): WMAction => ({
+    type: 'setViewport',
+    viewport: { width, height },
+  });
+  const CENTRE = { x: 0.5, y: 0.5 };
+  const TOP_RIGHT = { x: 1, y: 0 };
+  const open400 = (anchor = CENTRE) => open('w', { width: 400, height: 200, anchor });
+
+  it('opens in the middle of the usable area for a centre anchor', () => {
+    const s = run([vp(1000, 800), open400()]);
+    expect(s.windows.w).toMatchObject({ x: 300, y: 300, anchor: CENTRE });
+  });
+
+  it('opens different anchors in different places', () => {
+    const s = run([
+      vp(1000, 800),
+      open('a', { width: 400, height: 200, anchor: { x: 0, y: 0 } }),
+      open('b', { width: 400, height: 200, anchor: TOP_RIGHT }),
+      open('c', { width: 400, height: 200, anchor: { x: 0.5, y: 1 } }),
+    ]);
+    expect(s.windows.a).toMatchObject({ x: 0, y: 0 });
+    expect(s.windows.b).toMatchObject({ x: 600, y: 0 });
+    expect(s.windows.c).toMatchObject({ x: 300, y: 600 });
+  });
+
+  it('respects the menu bar and dock insets', () => {
+    const s = run([
+      {
+        type: 'setViewport',
+        viewport: { width: 1000, height: 800, insetTop: 100, insetBottom: 100 },
+      },
+      open400({ x: 0.5, y: 0 }),
+      open('b', { width: 400, height: 200, anchor: { x: 0.5, y: 1 } }),
+    ]);
+    expect(s.windows.w!.y).toBe(100);
+    expect(s.windows.b!.y).toBe(500);
+  });
+
+  it('follows the viewport on resize until the user drags it', () => {
+    let s = run([vp(1000, 800), open400(TOP_RIGHT)]);
+    expect(s.windows.w!.x).toBe(600);
+    s = wmReducer(s, vp(1400, 800));
+    expect(s.windows.w!.x).toBe(1000);
+
+    s = wmReducer(s, { type: 'move', id: 'w', x: 20, y: 40 });
+    expect(s.windows.w).toMatchObject({ x: 20, y: 40, anchor: null });
+    s = wmReducer(s, vp(1000, 800));
+    expect(s.windows.w!.x).toBe(20);
+  });
+
+  it('a window bigger than the viewport is pinned on screen', () => {
+    const s = run([vp(390, 700), open('w', { width: 900, height: 640, anchor: CENTRE })]);
+    expect(s.windows.w).toMatchObject({ x: 0, y: 30 });
+  });
+
+  it('an explicit position wins over the anchor', () => {
+    const s = run([
+      vp(1000, 800),
+      open('w', { x: 10, y: 10, width: 400, height: 200, anchor: CENTRE }),
+    ]);
+    expect(s.windows.w).toMatchObject({ x: 10, y: 10, anchor: null });
+  });
+
+  it('anchoring survives the compact round trip', () => {
+    let s = run([vp(1000, 800), open400(TOP_RIGHT)]);
+    s = wmReducer(s, { type: 'setLayout', layout: 'compact' });
+    s = wmReducer(s, vp(390, 700));
+    s = wmReducer(s, { type: 'setLayout', layout: 'windowed' });
+    s = wmReducer(s, vp(1000, 800));
+    expect(s.windows.w).toMatchObject({ x: 600, y: 0, anchor: TOP_RIGHT });
   });
 });

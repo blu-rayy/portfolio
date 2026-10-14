@@ -38,14 +38,14 @@ describe('history sync', () => {
   it('opening pushes a history entry and updates the URL', () => {
     attach();
     const before = window.history.length;
-    open('about');
-    expect(window.location.search).toBe('?window=about');
+    open('me');
+    expect(window.location.search).toBe('?window=me');
     expect(window.history.length).toBe(before + 1);
   });
 
   it('back closes the window that was opened', async () => {
     attach();
-    open('about');
+    open('me');
     window.history.back();
     await tick();
     expect(ids()).toEqual([]);
@@ -54,22 +54,22 @@ describe('history sync', () => {
 
   it('back closes only the most recent window; forward re-opens it', async () => {
     attach();
-    open('about');
-    open('episodes');
+    open('me');
+    open('works');
     window.history.back();
     await tick();
-    expect(ids()).toEqual(['about']);
-    expect(store.getState().focusedId).toBe('about');
+    expect(ids()).toEqual(['me']);
+    expect(store.getState().focusedId).toBe('me');
     window.history.forward();
     await tick();
-    expect(store.getState().focusedId).toBe('episodes');
-    expect(ids().sort()).toEqual(['about', 'episodes']);
+    expect(store.getState().focusedId).toBe('works');
+    expect(ids().sort()).toEqual(['me', 'works']);
   });
 
   it('requestClose goes through history when the entry opened that window', async () => {
     attach();
-    open('about');
-    store.getState().requestClose('about');
+    open('me');
+    store.getState().requestClose('me');
     await tick();
     expect(ids()).toEqual([]);
     expect(window.location.search).toBe('');
@@ -77,10 +77,10 @@ describe('history sync', () => {
 
   it('closing a window that is not the latest entry fixes the URL', async () => {
     attach();
-    open('about');
-    open('episodes');
-    store.getState().requestClose('about');
-    expect(store.getState().focusedId).toBe('episodes');
+    open('me');
+    open('works');
+    store.getState().requestClose('me');
+    expect(store.getState().focusedId).toBe('works');
     window.history.back();
     await tick();
     // The entry we went back onto pointed at the now-closed "about" window.
@@ -90,11 +90,11 @@ describe('history sync', () => {
 
   it('focus changes replace instead of pushing', () => {
     attach();
-    open('about');
-    open('episodes');
+    open('me');
+    open('works');
     const len = window.history.length;
-    store.getState().dispatch({ type: 'focus', id: 'about' });
+    store.getState().dispatch({ type: 'focus', id: 'me' });
     expect(window.history.length).toBe(len);
-    expect(window.location.search).toBe('?window=about');
+    expect(window.location.search).toBe('?window=me');
   });
 });

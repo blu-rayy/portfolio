@@ -1,7 +1,7 @@
 // Pure window-manager reducer. No React, no DOM, no side effects.
 //
 // One state shape powers both presentations:
-//   "windowed": every non-minimized window is rendered, overlapping, draggable.
+//   "windowed": every open window is rendered, overlapping, draggable.
 //   "compact" : only the focused window is rendered, full-screen, like a phone app.
 // Switching layout never touches `windows`, `order` or `focusedId`, so no window
 // is lost on resize/rotation. That's the whole trick: compact is a presentation
@@ -19,17 +19,27 @@ export interface Viewport {
   insetBottom: number;
 }
 
+export interface Anchor {
+  x: number;
+  y: number;
+}
+
 export interface WindowState {
   id: WindowId;
   x: number;
   y: number;
   width: number;
   height: number;
-  minimized: boolean;
+  /**
+   * Where the window sits in the usable area, as fractions: (0, 0) top-left,
+   * (0.5, 0.5) centred, (1, 1) bottom-right. While set, the position follows
+   * the viewport on resize; the first drag clears it.
+   */
+  anchor: Anchor | null;
 }
 
 export interface WMState {
-  /** Every open window, minimized or not. */
+  /** Every open window. */
   windows: Record<WindowId, WindowState>;
   /** Z-order, back to front: the last item is the topmost window. */
   order: WindowId[];
@@ -46,11 +56,11 @@ export type WMAction =
       y?: number;
       width?: number;
       height?: number;
+      /** Open at this spot of the desktop and keep it there until moved. */
+      anchor?: Anchor;
     }
   | { type: 'close'; id: WindowId }
   | { type: 'focus'; id: WindowId }
-  | { type: 'minimize'; id: WindowId }
-  | { type: 'restore'; id: WindowId }
   | { type: 'move'; id: WindowId; x: number; y: number }
   | { type: 'setLayout'; layout: Layout }
   | { type: 'setViewport'; viewport: Partial<Viewport> };
@@ -98,17 +108,25 @@ export function clampPosition(
   };
 }
 
-function bringToFront(order: WindowId[], id: WindowId): WindowId[] {
-  return [...order.filter((w) => w !== id), id];
+/** Window placed at `anchor` of the usable area, clamped to stay on screen. */
+export function anchoredPosition(
+  anchor: Anchor,
+  width: number,
+  height: number,
+  v: Viewport,
+): { x: number; y: number } {
+  const usable = v.height - v.insetTop - v.insetBottom;
+  return clampPosition(
+    (v.width - width) * anchor.x,
+    v.insetTop + (usable - height) * anchor.y,
+    width,
+    height,
+    v,
+  );
 }
 
-/** Topmost window that is not minimized, optionally skipping one id. */
-function topmostVisible(state: WMState, skip?: WindowId): WindowId | null {
-  for (let i = state.order.length - 1; i >= 0; i--) {
-    const id = state.order[i]!;
-    if (id !== skip && !state.windows[id]?.minimized) return id;
-  }
-  return null;
+function bringToFront(order: WindowId[], id: WindowId): WindowId[] {
+  return [...order.filter((w) => w !== id), id];
 }
 
 function withWindow(state: WMState, id: WindowId, patch: Partial<WindowState>): WMState {
@@ -121,7 +139,9 @@ function reclamp(state: WMState): WMState {
   let changed = false;
   const windows: Record<WindowId, WindowState> = {};
   for (const w of Object.values(state.windows)) {
-    const { x, y } = clampPosition(w.x, w.y, w.width, w.height, state.viewport);
+    const { x, y } = w.anchor
+      ? anchoredPosition(w.anchor, w.width, w.height, state.viewport)
+      : clampPosition(w.x, w.y, w.width, w.height, state.viewport);
     if (x !== w.x || y !== w.y) changed = true;
     windows[w.id] = x === w.x && y === w.y ? w : { ...w, x, y };
   }
@@ -133,29 +153,34 @@ export function wmReducer(state: WMState, action: WMAction): WMState {
     case 'open': {
       const existing = state.windows[action.id];
       if (existing) {
-        // Opening an already-open window restores and raises it.
-        const restored = withWindow(state, action.id, { minimized: false });
+        // Opening an already-open window just raises it.
         return {
-          ...restored,
-          order: bringToFront(restored.order, action.id),
+          ...state,
+          order: bringToFront(state.order, action.id),
           focusedId: action.id,
         };
       }
       const width = action.width ?? DEFAULT_WINDOW_SIZE.width;
       const height = action.height ?? DEFAULT_WINDOW_SIZE.height;
       const slot = state.order.length % CASCADE_SLOTS;
-      const { x, y } = clampPosition(
-        action.x ?? CASCADE_ORIGIN.x + slot * CASCADE_STEP,
-        action.y ?? CASCADE_ORIGIN.y + slot * CASCADE_STEP,
-        width,
-        height,
-        state.viewport,
-      );
+      const anchor =
+        action.anchor && action.x === undefined && action.y === undefined
+          ? action.anchor
+          : null;
+      const { x, y } = anchor
+        ? anchoredPosition(anchor, width, height, state.viewport)
+        : clampPosition(
+            action.x ?? CASCADE_ORIGIN.x + slot * CASCADE_STEP,
+            action.y ?? CASCADE_ORIGIN.y + slot * CASCADE_STEP,
+            width,
+            height,
+            state.viewport,
+          );
       return {
         ...state,
         windows: {
           ...state.windows,
-          [action.id]: { id: action.id, x, y, width, height, minimized: false },
+          [action.id]: { id: action.id, x, y, width, height, anchor },
         },
         order: [...state.order, action.id],
         focusedId: action.id,
@@ -170,42 +195,17 @@ export function wmReducer(state: WMState, action: WMAction): WMState {
       const next: WMState = { ...state, windows, order };
       return {
         ...next,
-        focusedId: state.focusedId === action.id ? topmostVisible(next) : state.focusedId,
+        focusedId:
+          state.focusedId === action.id ? (order.at(-1) ?? null) : state.focusedId,
       };
     }
 
     case 'focus': {
-      const w = state.windows[action.id];
-      // Focusing a minimized window is a no-op; use `restore` for that.
-      if (!w || w.minimized) return state;
+      if (!state.windows[action.id]) return state;
       if (state.focusedId === action.id && state.order.at(-1) === action.id) return state;
       return {
         ...state,
         order: bringToFront(state.order, action.id),
-        focusedId: action.id,
-      };
-    }
-
-    case 'minimize': {
-      const w = state.windows[action.id];
-      if (!w || w.minimized) return state;
-      const next = withWindow(state, action.id, { minimized: true });
-      return {
-        ...next,
-        focusedId:
-          state.focusedId === action.id
-            ? topmostVisible(next, action.id)
-            : state.focusedId,
-      };
-    }
-
-    case 'restore': {
-      const w = state.windows[action.id];
-      if (!w) return state;
-      const next = withWindow(state, action.id, { minimized: false });
-      return {
-        ...next,
-        order: bringToFront(next.order, action.id),
         focusedId: action.id,
       };
     }
@@ -220,8 +220,9 @@ export function wmReducer(state: WMState, action: WMAction): WMState {
         w.height,
         state.viewport,
       );
-      if (x === w.x && y === w.y) return state;
-      return withWindow(state, action.id, { x, y });
+      if (x === w.x && y === w.y && !w.anchor) return state;
+      // Any move (drag) detaches the window from its anchor.
+      return withWindow(state, action.id, { x, y, anchor: null });
     }
 
     case 'setLayout': {
