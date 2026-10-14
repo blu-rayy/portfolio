@@ -96,14 +96,14 @@ export interface WindowDefaults {
 }
 
 const STATIC_DEFAULTS: Record<StaticWindowId, WindowDefaults> = {
-  welcome: { width: 660, height: 440, anchor: { x: 0.5, y: 0.5 } },
-  works: { width: 900, height: 640, anchor: { x: 0.12, y: 0.15 } },
-  me: { width: 760, height: 600, anchor: { x: 0.9, y: 0.08 } },
-  skills: { width: 640, height: 480, anchor: { x: 0.05, y: 0.9 } },
-  guestbook: { width: 580, height: 460, anchor: { x: 0.92, y: 0.85 } },
-  contact: { width: 560, height: 440, anchor: { x: 0.55, y: 0.78 } },
+  welcome: { width: 540, height: 360, anchor: { x: 0.5, y: 0.5 } },
+  works: { width: 720, height: 520, anchor: { x: 0.12, y: 0.15 } },
+  me: { width: 620, height: 480, anchor: { x: 0.9, y: 0.08 } },
+  skills: { width: 520, height: 400, anchor: { x: 0.05, y: 0.9 } },
+  guestbook: { width: 480, height: 380, anchor: { x: 0.92, y: 0.85 } },
+  contact: { width: 460, height: 360, anchor: { x: 0.55, y: 0.78 } },
 };
-const PROJECT_DEFAULTS: WindowDefaults = { width: 780, height: 620, anchor: null };
+const PROJECT_DEFAULTS: WindowDefaults = { width: 640, height: 500, anchor: null };
 
 /** Size and placement a window opens with when the caller doesn't say. */
 export function windowDefaultsFor(id: string): WindowDefaults {

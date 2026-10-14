@@ -956,3 +956,105 @@
   font-size: 17px;
   line-height: 1.5;
 }
+
+/* ---------- compact chrome for mouse-driven desktops ------------------------------
+ * The phone / touch sizes above keep 44px targets. With a fine pointer on a wide
+ * screen everything shrinks (menu bar, title bars, dock, type) so the windows
+ * get the room, like the reference desktop. Appended last so it wins ties.
+ */
+@media (width >= 64rem) and (pointer: fine) {
+  [data-mode='fun'] {
+    --menubar-h: 28px;
+    --dock-h: 72px;
+  }
+
+  .menubar {
+    font-size: 11px;
+  }
+  .menubar-logo {
+    gap: 6px;
+    padding: 0 10px;
+    font-size: 11px;
+  }
+  .menubar-cell {
+    padding: 0 10px;
+  }
+  .menubar-wash {
+    padding: 0 10px;
+    font-size: 11px;
+  }
+
+  .win-titlebar {
+    height: 28px;
+    gap: 6px;
+    padding: 0 8px 0 5px;
+  }
+  .win-title {
+    font-size: 12px;
+  }
+  .win-btn {
+    width: 18px;
+    height: 18px;
+  }
+  .win-btn svg {
+    width: 8px;
+    height: 8px;
+  }
+
+  .well {
+    margin: 8px 8px 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .win:not(:has(.win-status)) .well {
+    margin-bottom: 8px;
+  }
+  .well-pad {
+    padding: 18px 22px;
+  }
+  .well h2 {
+    font-size: 26px;
+  }
+  .well h3 {
+    font-size: 20px;
+  }
+  .welcome-h1 {
+    font-size: clamp(30px, 4vw, 52px);
+  }
+  .work-title {
+    font-size: 23px;
+  }
+  .work-summary {
+    font-size: 14px;
+  }
+  .work-meta {
+    font-size: 13px;
+  }
+  .work-thumb {
+    width: 128px;
+  }
+  .win-status {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .dock {
+    padding-bottom: 10px;
+  }
+  .dock-tray {
+    gap: 3px;
+    padding: 4px;
+  }
+  .dock-item {
+    gap: 3px;
+    width: 72px;
+    min-width: 0;
+    min-height: 50px;
+    padding: 3px 4px;
+    font-size: 12px;
+  }
+  .dock-item svg {
+    width: 22px;
+    height: 22px;
+  }
+}

@@ -58,7 +58,7 @@ describe('store defaults', () => {
   it('fills in size and placement for known windows; explicit values win', async () => {
     const { withDefaults } = await import('@/lib/wm/store');
     expect(withDefaults({ type: 'open', id: 'works' })).toMatchObject({
-      width: 900,
+      width: 720,
       anchor: { x: 0.12, y: 0.15 },
     });
     const placed = withDefaults({ type: 'open', id: 'works', x: 5, y: 5 });

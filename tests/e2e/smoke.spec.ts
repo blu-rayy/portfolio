@@ -82,7 +82,9 @@ test.describe('fun mode (Kris OS)', () => {
     await expect(page.locator('html')).toHaveAttribute('data-mode', 'clean');
   });
 
-  test('touch targets are at least 44px', async ({ page }) => {
+  test('touch targets are at least 44px', async ({ page, isMobile }) => {
+    // Mouse-driven desktops use a deliberately smaller chrome (styles/fun.css).
+    test.skip(!isMobile, 'touch sizing applies to touch devices');
     await page.goto('/');
     for (const item of await page.locator('[data-dock-item]').all()) {
       const box = (await item.boundingBox())!;
