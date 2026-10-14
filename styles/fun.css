@@ -746,6 +746,14 @@
   right: 18px;
   bottom: 24px;
 }
+@media (width < 64rem) {
+  .sticky {
+    width: 118px;
+    padding: 8px 10px;
+    font-size: 15px;
+    line-height: 1.15;
+  }
+}
 @media (width < 64rem) and (height < 760px) {
   /* short phones: keep the app grid clear */
   .sticky {
